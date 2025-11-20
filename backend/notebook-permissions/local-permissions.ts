@@ -378,7 +378,9 @@ export class LocalPermissionsProvider implements PermissionsProvider {
       if (owned && !shared) {
         // Only owned notebooks
         query = `
-          SELECT id, owner_id, title, created_at, updated_at
+          SELECT id, owner_id, title,
+            strftime('%Y-%m-%dT%H:%M:%SZ', created_at) as created_at,
+            strftime('%Y-%m-%dT%H:%M:%SZ', updated_at) as updated_at
           FROM notebooks
           WHERE owner_id = ?
           ORDER BY updated_at DESC
@@ -388,7 +390,9 @@ export class LocalPermissionsProvider implements PermissionsProvider {
       } else if (shared && !owned) {
         // Only shared notebooks (writer permissions)
         query = `
-          SELECT n.id, n.owner_id, n.title, n.created_at, n.updated_at
+          SELECT n.id, n.owner_id, n.title,
+            strftime('%Y-%m-%dT%H:%M:%SZ', n.created_at) as created_at,
+            strftime('%Y-%m-%dT%H:%M:%SZ', n.updated_at) as updated_at
           FROM notebooks n
           INNER JOIN notebook_permissions np ON n.id = np.notebook_id
           WHERE np.user_id = ? AND np.permission = 'writer'
@@ -399,7 +403,9 @@ export class LocalPermissionsProvider implements PermissionsProvider {
       } else {
         // All accessible notebooks (owned + shared)
         query = `
-          SELECT DISTINCT n.id, n.owner_id, n.title, n.created_at, n.updated_at
+          SELECT DISTINCT n.id, n.owner_id, n.title,
+            strftime('%Y-%m-%dT%H:%M:%SZ', n.created_at) as created_at,
+            strftime('%Y-%m-%dT%H:%M:%SZ', n.updated_at) as updated_at
           FROM notebooks n
           LEFT JOIN notebook_permissions np ON n.id = np.notebook_id
           WHERE n.owner_id = ? OR (np.user_id = ? AND np.permission = 'writer')
